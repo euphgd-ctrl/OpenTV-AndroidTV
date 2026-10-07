@@ -22,16 +22,16 @@ jobs:
       - name: Prepare APKs
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.3.3.apk
-          cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.0.0.apk
+          cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.1.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: Android-TV-APKs
           path: |
             OpenTV-v1.3.3.apk
-            EriTV-v1.0.0.apk
+            EriTV-v1.1.0.apk
       - name: Publish EriTV test release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete eritv-v1.0.0-test --yes --cleanup-tag || true
-          gh release create eritv-v1.0.0-test EriTV-v1.0.0.apk --title "EriTV v1.0.0 Test Build" --notes "Standalone ERi-TV 1 Android TV app. Opens directly to the channel with automatic reconnect."
+          gh release delete eritv-v1.1.0-test --yes --cleanup-tag || true
+          gh release create eritv-v1.1.0-test EriTV-v1.1.0.apk --title "EriTV v1.1.0 Test Build" --notes "EriTV v1.1: larger HLS buffer and less aggressive stall recovery."
