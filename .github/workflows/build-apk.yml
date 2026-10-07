@@ -20,15 +20,15 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.2.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.3.0.apk
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenTV-debug-apk
-          path: OpenTV-v1.2.0.apk
+          path: OpenTV-v1.3.0.apk
       - name: Publish test release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v1.2.0-test --yes --cleanup-tag || true
-          gh release create v1.2.0-test OpenTV-v1.2.0.apk --title "OpenTV v1.2.0 Test Build" --notes "v1.2 test build: search, favorites fix, and automatic stream recovery."
+          gh release delete v1.3.0-test --yes --cleanup-tag || true
+          gh release create v1.3.0-test OpenTV-v1.3.0.apk --title "OpenTV v1.3.0 Test Build" --notes "v1.3 test build: Eritrea TV category and improved self-clearing retry UI."
