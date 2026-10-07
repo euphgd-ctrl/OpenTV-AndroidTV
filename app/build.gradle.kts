@@ -6,8 +6,8 @@ android {
         applicationId = "com.opentv.app"
         minSdk = 23
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.3.3"
+        versionCode = 8
+        versionName = "1.4.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
