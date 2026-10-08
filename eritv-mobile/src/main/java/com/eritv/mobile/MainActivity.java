@@ -8,6 +8,8 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -82,6 +84,13 @@ public class MainActivity extends AppCompatActivity {
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(http))
                 .setLoadControl(load)
                 .build();
+
+        // Respect incoming calls and other phone audio (Android audio focus).
+        AudioAttributes audio = new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build();
+        player.setAudioAttributes(audio, true);
 
         PlayerView playerView = findViewById(R.id.player);
         playerView.setUseController(false);
