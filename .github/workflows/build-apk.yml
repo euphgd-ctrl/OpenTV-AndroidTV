@@ -46,7 +46,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete eritv-v1.2.0-test --yes --cleanup-tag || true
-          gh release create eritv-v1.2.0-test EriTV-v1.2.0.apk --title "EriTV v1.2.0 Test Build" --notes "EriTV 1.2: smarter live HLS recovery, 6 segment load retries, 90-second stall tolerance, stable 120-second buffer, reconnect cancellation and live-window handling."
+          gh release create eritv-v1.2.0-test EriTV-v1.2.0.apk --latest=false --title "EriTV v1.2.0 Test Build" --notes "EriTV 1.2: smarter live HLS recovery, 6 segment load retries, 90-second stall tolerance, stable 120-second buffer, reconnect cancellation and live-window handling."
+      - name: Ensure EriTV release is public
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit eritv-v1.2.0-test --draft=false
       - name: Publish EriTV Mobile test release
         if: github.event_name != 'pull_request'
         env:
