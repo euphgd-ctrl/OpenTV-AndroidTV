@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override public void onPlayerError(PlaybackException error) {
-                Log.w(TAG, "Playback error " + error.errorCodeName, error);
+                Log.w(TAG, "Playback error " + error.getErrorCodeName(), error);
                 healthySinceMs = 0L;
 
                 if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
