@@ -55,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private int restartAttempts;
     private boolean reconnectScheduled;
     private boolean retriesExpired;
+    private long behindWindowAttemptMs;
+    private int behindWindowAttempts;
 
     private final Runnable reconnectTask = () -> {
         reconnectScheduled = false;
@@ -173,12 +175,17 @@ public class MainActivity extends AppCompatActivity {
                 healthySinceMs = 0L;
 
                 if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
-                    // Android's recommended fix: rejoin the current live
-                    // window instead of repeatedly requesting expired segments.
-                    player.seekToDefaultPosition();
-                    player.prepare();
-                    player.play();
-                    return;
+                    // Rejoin the live edge at most twice within 30 seconds;
+                    // persistent failures use normal backed-off recovery.
+                    long now = SystemClock.elapsedRealtime();
+                    if (now - behindWindowAttemptMs > 30_000L) behindWindowAttempts = 0;
+                    behindWindowAttemptMs = now;
+                    if (++behindWindowAttempts <= 2) {
+                        player.seekToDefaultPosition();
+                        player.prepare();
+                        player.play();
+                        return;
+                    }
                 }
                 requestReconnect("Stream error");
             }
@@ -214,7 +221,10 @@ public class MainActivity extends AppCompatActivity {
             handler.removeCallbacks(reconnectTask);
             reconnectScheduled = false;
         }
-        if (!retriesExpired) pill.setVisibility(View.GONE);
+        if (player != null && player.isPlaying()) {
+            retriesExpired = false;
+            pill.setVisibility(View.GONE);
+        }
     }
 
     private boolean retryWindowExpired(long now) {
