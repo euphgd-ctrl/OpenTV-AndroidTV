@@ -23,14 +23,14 @@ jobs:
         run: gradle :app:assembleDebug :eritv:assembleDebug :eritv-mobile:assembleDebug
       - name: Prepare APKs
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.4.1.apk
+          cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.5.0.apk
           cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.2.0.apk
           cp eritv-mobile/build/outputs/apk/debug/eritv-mobile-debug.apk EriTV-Mobile-v1.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: Android-APKs
           path: |
-            OpenTV-v1.4.1.apk
+            OpenTV-v1.5.0.apk
             EriTV-v1.2.0.apk
             EriTV-Mobile-v1.0.0.apk
       - name: Publish OpenTV test release
@@ -38,8 +38,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v1.4.1-test --yes --cleanup-tag || true
-          gh release create v1.4.1-test OpenTV-v1.4.1.apk --title "OpenTV v1.4.1 Test Build" --notes "EriTV-proven larger buffer and 90-second stall tolerance applied to every channel."
+          gh release delete v1.5.0-test --yes --cleanup-tag || true
+          gh release create v1.5.0-test OpenTV-v1.5.0.apk --title "OpenTV v1.5.0 Test Build" --notes "EriTV 1.2-proven HLS recovery: safer segment retries, delayed stall handling, live-window recovery and cancellation of unnecessary reconnects."
       - name: Publish EriTV TV test release
         if: github.event_name != 'pull_request'
         env:
