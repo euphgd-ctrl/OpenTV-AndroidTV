@@ -3,3 +3,4 @@ dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_P
 rootProject.name = "OpenTV"
 include(":app")
 include(":eritv")
+include(":eritv-mobile")
