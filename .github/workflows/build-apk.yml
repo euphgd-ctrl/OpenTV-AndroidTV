@@ -19,6 +19,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Install official Eritrean flag artwork for EriTV
+        run: |
+          set -euo pipefail
+          # Public-domain official flag SVG, including the complete olive wreath.
+          curl --fail --location --retry 5 --retry-delay 2 \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_Eritrea.svg' \
+            -o /tmp/eritrea-official.svg
+          python -m pip install --quiet cairosvg
+          python - <<'PY'
+          import cairosvg
+          from pathlib import Path
+          src = Path('/tmp/eritrea-official.svg').read_bytes()
+          if b'<svg' not in src[:1000]:
+              raise SystemExit('Official flag download was not SVG')
+          out = Path('eritv/src/main/res/drawable-nodpi')
+          out.mkdir(parents=True, exist_ok=True)
+          cairosvg.svg2png(bytestring=src, write_to=str(out / 'eritrea_official.png'),
+                           output_width=1200, output_height=600)
+          PY
       - name: Build OpenTV, EriTV TV, and EriTV Mobile
         run: gradle :app:assembleDebug :eritv:assembleDebug :eritv-mobile:assembleDebug
       - name: Prepare APKs
