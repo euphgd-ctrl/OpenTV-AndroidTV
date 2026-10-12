@@ -29,6 +29,8 @@ jobs:
           python -m pip install --quiet cairosvg
           python - <<'PY'
           import cairosvg
+          from PIL import Image
+          from io import BytesIO
           from pathlib import Path
           src = Path('/tmp/eritrea-official.svg').read_bytes()
           if b'<svg' not in src[:1000]:
@@ -37,6 +39,10 @@ jobs:
           out.mkdir(parents=True, exist_ok=True)
           cairosvg.svg2png(bytestring=src, write_to=str(out / 'eritrea_official.png'),
                            output_width=1200, output_height=600)
+          flag = Image.open(BytesIO(cairosvg.svg2png(bytestring=src, output_width=512, output_height=256))).convert('RGBA')
+          icon = Image.new('RGBA', (512, 512), '#151515')
+          icon.paste(flag, (0, 128), flag)
+          icon.save(out / 'eritrea_icon.png')
           PY
       - name: Build OpenTV, EriTV TV, and EriTV Mobile
         run: gradle :app:assembleDebug :eritv:assembleDebug :eritv-mobile:assembleDebug
