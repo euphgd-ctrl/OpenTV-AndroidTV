@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: android-release-main
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -78,6 +82,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release edit eritv-v1.2.1-test --draft=false
+      - name: Publish permanent EriTV TV download
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp EriTV-v1.2.1.apk EriTV.apk
+          if gh release view eritv-current >/dev/null 2>&1; then
+            gh release upload eritv-current EriTV.apk --clobber
+          else
+            gh release create eritv-current EriTV.apk \
+              --latest=false \
+              --title "EriTV Android TV - Current Download" \
+              --notes "Permanent EriTV Android TV download endpoint. The asset EriTV.apk is replaced automatically after each successful build. Use this stable URL for AFTVnews Downloader codes."
+          fi
+          gh release edit eritv-current --draft=false
+          echo "Permanent URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/eritv-current/EriTV.apk"
+          gh release view eritv-current --json assets --jq '.assets[].name' | grep -Fx 'EriTV.apk'
       - name: Publish EriTV Mobile test release
         if: github.event_name != 'pull_request'
         env:
