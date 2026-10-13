@@ -3,6 +3,9 @@ package com.eritv.app;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -19,12 +22,16 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Optional, user-confirmed updater. Never interrupts playback or installs silently. */
 public final class AppUpdater {
-    private static final String META = "https://raw.githubusercontent.com/euphgd-ctrl/OpenTV-AndroidTV/main/updates/eritv.json";
+    private static final String META = "https://github.com/euphgd-ctrl/OpenTV-AndroidTV/releases/download/eritv-current/eritv-update.json";
+    private static final String APK_URL = "https://github.com/euphgd-ctrl/OpenTV-AndroidTV/releases/download/eritv-current/EriTV.apk";
     private static final int TIMEOUT = 15000;
     private final Activity activity;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
@@ -41,14 +48,15 @@ public final class AppUpdater {
                 int latest = data.getInt("versionCode");
                 if (latest <= (Build.VERSION.SDK_INT >= 28 ? activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).getLongVersionCode() : activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode)) return;
                 String url = data.getString("apkUrl");
-                if (!url.startsWith("https://github.com/euphgd-ctrl/OpenTV-AndroidTV/releases/download/")) return;
+                String sha = data.getString("sha256").toLowerCase(Locale.US);
+                if (!APK_URL.equals(url) || !sha.matches("[0-9a-f]{64}")) return;
                 String name = data.optString("versionName", "new version");
                 ui.post(() -> {
                     if (!activity.isFinishing() && !activity.isDestroyed()) {
                         new AlertDialog.Builder(activity)
                             .setTitle("EriTV update available")
                             .setMessage("Version " + name + " is available. Update now? Live TV will continue until installation.")
-                            .setPositiveButton("Update", (d,w) -> download(url))
+                            .setPositiveButton("Update", (d,w) -> download(url, latest, sha))
                             .setNegativeButton("Later", null).show();
                     }
                 });
@@ -76,15 +84,17 @@ public final class AppUpdater {
         } finally { c.disconnect(); }
     }
 
-    private void download(String url) {
+    private void download(String url, int expectedVersion, String expectedSha) {
         Toast.makeText(activity, "Downloading EriTV update…", Toast.LENGTH_LONG).show();
         io.execute(() -> {
             HttpURLConnection c = null;
+            File file = null;
             try {
                 c = connection(url);
                 File dir = new File(activity.getCacheDir(), "updates");
                 if (!dir.exists() && !dir.mkdirs()) throw new Exception("Cannot create update directory");
-                File file = new File(dir, "EriTV-update.apk");
+                file = new File(dir, "EriTV-update.apk");
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 long total = 0;
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(file)) {
                     byte[] buf = new byte[32768];
@@ -92,16 +102,59 @@ public final class AppUpdater {
                     while ((n = in.read(buf)) != -1) {
                         total += n;
                         if (total > 100_000_000L) throw new Exception("APK too large");
+                        digest.update(buf, 0, n);
                         out.write(buf, 0, n);
                     }
                 }
-                if (total < 100_000L) throw new Exception("Incomplete APK");
+                if (total < 100_000L || !hex(digest.digest()).equals(expectedSha))
+                    throw new Exception("APK download integrity check failed");
+                verifyPackageAndSigning(file, expectedVersion);
                 apk = file;
                 ui.post(this::install);
+            } catch (SecurityException e) {
+                if (file != null) file.delete();
+                ui.post(() -> {
+                    if (!activity.isFinishing() && !activity.isDestroyed())
+                        new AlertDialog.Builder(activity)
+                            .setTitle("One-time reinstall required")
+                            .setMessage("Your existing EriTV has an older signing certificate. Android cannot update it directly. Uninstall EriTV, then open Downloader and enter code 6861670 to install the new version. Future updates can be installed inside the app.")
+                            .setPositiveButton("OK", null).show();
+                });
             } catch (Exception e) {
-                ui.post(() -> Toast.makeText(activity, "Update download failed. Try again later.", Toast.LENGTH_LONG).show());
+                if (file != null) file.delete();
+                ui.post(() -> Toast.makeText(activity, "Update failed. Please try again later.", Toast.LENGTH_LONG).show());
             } finally { if (c != null) c.disconnect(); }
         });
+    }
+
+    private static String hex(byte[] bytes) {
+        StringBuilder result = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) result.append(String.format(Locale.US, "%02x", b & 255));
+        return result.toString();
+    }
+
+    @SuppressWarnings("deprecation")
+    private void verifyPackageAndSigning(File file, int expectedVersion) throws Exception {
+        PackageManager pm = activity.getPackageManager();
+        int flags = Build.VERSION.SDK_INT >= 28
+                ? PackageManager.GET_SIGNING_CERTIFICATES : PackageManager.GET_SIGNATURES;
+        PackageInfo incoming = pm.getPackageArchiveInfo(file.getAbsolutePath(), flags);
+        PackageInfo existing = pm.getPackageInfo(activity.getPackageName(), flags);
+        if (incoming == null || !activity.getPackageName().equals(incoming.packageName))
+            throw new Exception("Downloaded APK has the wrong package");
+        long v = Build.VERSION.SDK_INT >= 28
+                ? incoming.getLongVersionCode() : incoming.versionCode;
+        if (v != expectedVersion) throw new Exception("Downloaded APK has an unexpected version");
+        Signature[] newSigners = Build.VERSION.SDK_INT >= 28
+                ? (incoming.signingInfo == null ? null : incoming.signingInfo.getApkContentsSigners())
+                : incoming.signatures;
+        Signature[] oldSigners = Build.VERSION.SDK_INT >= 28
+                ? (existing.signingInfo == null ? null : existing.signingInfo.getApkContentsSigners())
+                : existing.signatures;
+        if (newSigners == null || oldSigners == null
+                || newSigners.length != 1 || oldSigners.length != 1
+                || !Arrays.equals(newSigners[0].toByteArray(), oldSigners[0].toByteArray()))
+            throw new SecurityException("Installed APK signed with a different certificate");
     }
 
     private void install() {
