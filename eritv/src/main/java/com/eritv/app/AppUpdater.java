@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.core.content.FileProvider;
 
 import org.json.JSONObject;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -77,10 +78,15 @@ public final class AppUpdater {
     private static String readText(String address) throws Exception {
         HttpURLConnection c = connection(address);
         try (InputStream in = c.getInputStream()) {
-            byte[] bytes = new byte[32768];
-            int n = in.read(bytes);
-            if (n < 1 || n == bytes.length) throw new Exception("Metadata size invalid");
-            return new String(bytes, 0, n, java.nio.charset.StandardCharsets.UTF_8);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                if (out.size() + n > 8192) throw new Exception("Update metadata too large");
+                out.write(buf, 0, n);
+            }
+            if (out.size() == 0) throw new Exception("Empty update metadata");
+            return out.toString("UTF-8");
         } finally { c.disconnect(); }
     }
 
