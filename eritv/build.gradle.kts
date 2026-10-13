@@ -14,7 +14,7 @@ android { namespace="com.eritv.app"; compileSdk=35
    buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("eritvRelease"); isMinifyEnabled = false } }
  }
 
- defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=7; versionName="1.3.1" }
+ defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=8; versionName="1.4.0" }
  compileOptions { sourceCompatibility=JavaVersion.VERSION_17; targetCompatibility=JavaVersion.VERSION_17 }
 }
 dependencies {
