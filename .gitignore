@@ -1,0 +1,8 @@
+# NEVER commit plaintext Android signing keys or signing passwords.
+signing/*.jks
+signing/*.p12
+signing/*.keystore
+*.properties.local
+.env
+.env.*
+# Encrypted signing/eritv-release.p12.enc is intentionally tracked.
