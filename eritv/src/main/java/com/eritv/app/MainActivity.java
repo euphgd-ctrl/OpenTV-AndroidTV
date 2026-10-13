@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private ExoPlayer player;
+    private AppUpdater updater;
     private View pill;
     private TextView status;
 
@@ -132,6 +133,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
+        updater = new AppUpdater(this);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (!isFinishing() && !isDestroyed()) updater.check();
+        }, 12000L);
 
         pill = findViewById(R.id.retryPill);
         status = findViewById(R.id.retryText);
@@ -270,6 +275,11 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (updater != null) updater.onResume();
     }
 
     @Override protected void onDestroy() {
