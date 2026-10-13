@@ -39,7 +39,7 @@ public final class AppUpdater {
             try {
                 JSONObject data = new JSONObject(readText(META));
                 int latest = data.getInt("versionCode");
-                if (latest <= BuildConfig.VERSION_CODE) return;
+                if (latest <= (Build.VERSION.SDK_INT >= 28 ? activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).getLongVersionCode() : activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode)) return;
                 String url = data.getString("apkUrl");
                 if (!url.startsWith("https://github.com/euphgd-ctrl/OpenTV-AndroidTV/releases/download/")) return;
                 String name = data.optString("versionName", "new version");
