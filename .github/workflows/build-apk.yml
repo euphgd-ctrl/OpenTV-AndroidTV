@@ -53,14 +53,14 @@ jobs:
       - name: Prepare APKs
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.5.0.apk
-          cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.2.1.apk
+          cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.3.0.apk
           cp eritv-mobile/build/outputs/apk/debug/eritv-mobile-debug.apk EriTV-Mobile-v1.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: Android-APKs
           path: |
             OpenTV-v1.5.0.apk
-            EriTV-v1.2.1.apk
+            EriTV-v1.3.0.apk
             EriTV-Mobile-v1.0.0.apk
       - name: Publish OpenTV test release
         if: github.event_name != 'pull_request'
@@ -74,21 +74,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete eritv-v1.2.1-test --yes --cleanup-tag || true
-          gh release create eritv-v1.2.1-test EriTV-v1.2.1.apk --latest=false --title "EriTV v1.2.1 Test Build" --notes "EriTV 1.2.1: official Eritrean national flag icon and banner; preserves proven 1.2 playback and reconnection."
+          gh release delete eritv-v1.3.0-test --yes --cleanup-tag || true
+          gh release create eritv-v1.3.0-test EriTV-v1.3.0.apk --latest=false --title "EriTV v1.3.0 Test Build" --notes "EriTV 1.3.0: optional in-app update prompt and installer, official flag, proven live playback."
       - name: Ensure EriTV release is public
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release edit eritv-v1.2.1-test --draft=false
+          gh release edit eritv-v1.3.0-test --draft=false
       - name: Publish permanent EriTV TV download
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cp EriTV-v1.2.1.apk EriTV.apk
+          cp EriTV-v1.3.0.apk EriTV.apk
           if gh release view eritv-current >/dev/null 2>&1; then
             gh release upload eritv-current EriTV.apk --clobber
           else
