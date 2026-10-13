@@ -11,7 +11,7 @@ android { namespace="com.eritv.app"; compileSdk=35
      keyAlias = signingAlias
      keyPassword = signingKeyPassword
    } }
-   buildTypes { getByName("debug") { signingConfig = signingConfigs.getByName("eritvRelease") } }
+   buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("eritvRelease"); isMinifyEnabled = false } }
  }
 
  defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=7; versionName="1.3.1" }
