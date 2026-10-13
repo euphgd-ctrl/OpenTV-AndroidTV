@@ -96,9 +96,9 @@ jobs:
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.5.0.apk
           if [ "$ERITV_SIGNING_READY" = "true" ]; then
-            cp eritv/build/outputs/apk/release/eritv-release.apk EriTV-v1.3.1.apk
+            cp eritv/build/outputs/apk/release/eritv-release.apk EriTV-v1.4.0.apk
           else
-            cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.3.1.apk
+            cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.4.0.apk
           fi
           cp eritv-mobile/build/outputs/apk/debug/eritv-mobile-debug.apk EriTV-Mobile-v1.0.0.apk
       - uses: actions/upload-artifact@v4
@@ -106,7 +106,7 @@ jobs:
           name: Android-APKs
           path: |
             OpenTV-v1.5.0.apk
-            EriTV-v1.3.1.apk
+            EriTV-v1.4.0.apk
             EriTV-Mobile-v1.0.0.apk
       - name: Verify persistent EriTV signing certificate
         if: github.event_name != 'pull_request' && env.ERITV_SIGNING_READY == 'true'
@@ -114,7 +114,7 @@ jobs:
           set -euo pipefail
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
           test -n "$APKSIGNER"
-          "$APKSIGNER" verify --verbose --print-certs EriTV-v1.3.1.apk > "$RUNNER_TEMP/eritv-apk-verification.txt"
+          "$APKSIGNER" verify --verbose --print-certs EriTV-v1.4.0.apk > "$RUNNER_TEMP/eritv-apk-verification.txt"
           CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/eritv-apk-verification.txt" | head -n 1)"
           test -n "$CERT"
           if [ -f signing/eritv-cert.sha256 ]; then
@@ -140,21 +140,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete eritv-v1.3.1-test --yes --cleanup-tag || true
-          gh release create eritv-v1.3.1-test EriTV-v1.3.1.apk --latest=false --title "EriTV v1.3.1 Test Build" --notes "EriTV 1.3.1: verified optional in-app updater, permanent encrypted signing key, official flag, proven playback."
+          gh release delete eritv-v1.4.0-test --yes --cleanup-tag || true
+          gh release create eritv-v1.4.0-test EriTV-v1.4.0.apk --latest=false --title "EriTV v1.4.0 Test Build" --notes "EriTV 1.4.0: verified optional in-app updater, permanent encrypted signing key, official flag, proven playback."
       - name: Ensure EriTV release is public
         if: github.event_name != 'pull_request' && env.ERITV_SIGNING_READY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release edit eritv-v1.3.1-test --draft=false
+          gh release edit eritv-v1.4.0-test --draft=false
       - name: Publish verified EriTV APK and update metadata
         if: github.event_name != 'pull_request' && env.ERITV_SIGNING_READY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cp EriTV-v1.3.1.apk EriTV.apk
+          cp EriTV-v1.4.0.apk EriTV.apk
           VERSION_CODE=$(grep -oE 'versionCode=[0-9]+' eritv/build.gradle.kts | head -1 | cut -d= -f2)
           VERSION_NAME=$(grep -oE 'versionName="[0-9.]+"' eritv/build.gradle.kts | head -1 | cut -d'"' -f2)
           SHA256=$(sha256sum EriTV.apk | cut -d' ' -f1)
