@@ -51,3 +51,7 @@ When modifying EriTV:
 ## Where to get the passphrase
 
 The repository does **not** contain the secret. Repository owner must supply it via GitHub Actions secret as described above.
+
+## Signing activation check
+
+A workflow dispatch or main-branch documentation commit can activate the first signed build after the repository signing secret is configured. Verify the public APK asset and signed release job before announcing activation.
