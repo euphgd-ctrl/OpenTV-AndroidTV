@@ -108,6 +108,26 @@ jobs:
             OpenTV-v1.5.0.apk
             EriTV-v1.3.1.apk
             EriTV-Mobile-v1.0.0.apk
+      - name: Verify persistent EriTV signing certificate
+        if: github.event_name != 'pull_request' && env.ERITV_SIGNING_READY == 'true'
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs EriTV-v1.3.1.apk > "$RUNNER_TEMP/eritv-apk-verification.txt"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/eritv-apk-verification.txt" | head -n 1)"
+          test -n "$CERT"
+          if [ -f signing/eritv-cert.sha256 ]; then
+            test "$CERT" = "$(cat signing/eritv-cert.sha256)"
+          else
+            echo "$CERT" > signing/eritv-cert.sha256
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add signing/eritv-cert.sha256
+            git commit -m "Pin EriTV release signing certificate fingerprint"
+            git push origin HEAD:main
+          fi
+          echo "EriTV signature verified against pinned certificate."
       - name: Publish OpenTV test release
         if: github.event_name != 'pull_request'
         env:
