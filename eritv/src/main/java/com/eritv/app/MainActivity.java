@@ -134,8 +134,13 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         updater = new AppUpdater(this);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (!isFinishing() && !isDestroyed()) updater.check();
+        handler.postDelayed(new Runnable() {
+            @Override public void run() {
+                if (isFinishing() || isDestroyed()) return;
+                updater.check();
+                // TV devices may stay running for weeks without reopening the app.
+                handler.postDelayed(this, 24 * 60 * 60 * 1000L);
+            }
         }, 12000L);
 
         pill = findViewById(R.id.retryPill);
