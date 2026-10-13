@@ -1,9 +1,9 @@
 plugins { id("com.android.application") }
 android { namespace="com.eritv.app"; compileSdk=35
  val signingPath = System.getenv("ERITV_KEYSTORE_PATH")
- val signingPassword = System.getenv("ERITV_KEYSTORE_PASSWORD")
- val signingAlias = System.getenv("ERITV_KEY_ALIAS")
- val signingKeyPassword = System.getenv("ERITV_KEY_PASSWORD")
+ val signingPassword = System.getenv("ERITV_SIGNING_PASSPHRASE")
+ val signingAlias = "eritv"
+ val signingKeyPassword = signingPassword
  if (!signingPath.isNullOrBlank() && !signingPassword.isNullOrBlank() && !signingAlias.isNullOrBlank() && !signingKeyPassword.isNullOrBlank()) {
    signingConfigs { create("eritvRelease") {
      storeFile = file(signingPath)
@@ -14,7 +14,7 @@ android { namespace="com.eritv.app"; compileSdk=35
    buildTypes { getByName("debug") { signingConfig = signingConfigs.getByName("eritvRelease") } }
  }
 
- defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=6; versionName="1.3.0" }
+ defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=7; versionName="1.3.1" }
  compileOptions { sourceCompatibility=JavaVersion.VERSION_17; targetCompatibility=JavaVersion.VERSION_17 }
 }
 dependencies {
