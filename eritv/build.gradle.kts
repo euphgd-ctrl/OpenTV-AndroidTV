@@ -1,6 +1,6 @@
 plugins { id("com.android.application") }
 android { namespace="com.eritv.app"; compileSdk=35
- defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=5; versionName="1.2.1" }
+ defaultConfig { applicationId="com.eritv.app"; minSdk=23; targetSdk=35; versionCode=6; versionName="1.3.0" }
  compileOptions { sourceCompatibility=JavaVersion.VERSION_17; targetCompatibility=JavaVersion.VERSION_17 }
 }
 dependencies {
