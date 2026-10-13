@@ -42,7 +42,7 @@ When modifying EriTV:
 
 ## Manual validation on actual Android TV
 
-- Install signed v1.3.1 fresh and launch; EriTV plays live, reconnects correctly.
+- Install signed v1.4.0 fresh and launch; EriTV plays live, reconnects correctly.
 - For an in-place-update test, release a higher version using the same key; launch old version, accept update, approve **Allow from this source** for EriTV (if requested), and approve Android Package Installer.
 - Verify settings and installed package persist; verify playback resumes.
 - Install pre-signing v1.3.0 separately; after metadata update, confirm it recommends one-time uninstall/reinstall instead of attempting an incompatible update.
