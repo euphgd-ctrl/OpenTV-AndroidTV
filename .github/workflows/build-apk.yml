@@ -114,8 +114,8 @@ jobs:
           set -euo pipefail
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
           test -n "$APKSIGNER"
-          "$APKSIGNER" verify --verbose --print-certs EriTV-v1.4.0.apk > "$RUNNER_TEMP/eritv-apk-verification.txt"
-          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/eritv-apk-verification.txt" | head -n 1)"
+          "$APKSIGNER" verify --verbose --print-certs EriTV-v1.4.0.apk | tee "$RUNNER_TEMP/eritv-apk-verification.txt"
+          CERT="$(grep -iE 'Signer #1 certificate SHA-256 digest:' "$RUNNER_TEMP/eritv-apk-verification.txt" | head -n 1 | sed -E 's/^.*digest:[[:space:]]*//' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
           test -n "$CERT"
           if [ -f signing/eritv-cert.sha256 ]; then
             test "$CERT" = "$(cat signing/eritv-cert.sha256)"
