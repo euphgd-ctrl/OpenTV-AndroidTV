@@ -87,11 +87,19 @@ jobs:
       - name: Build OpenTV, EriTV TV, and EriTV Mobile
         env:
           ERITV_SIGNING_PASSPHRASE: ${{ secrets.ERITV_SIGNING_PASSPHRASE }}
-        run: gradle :app:assembleDebug :eritv:assembleDebug :eritv-mobile:assembleDebug
+        run: |
+          gradle :app:assembleDebug :eritv:assembleDebug :eritv-mobile:assembleDebug
+          if [ "$ERITV_SIGNING_READY" = "true" ]; then
+            gradle :eritv:assembleRelease
+          fi
       - name: Prepare APKs
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk OpenTV-v1.5.0.apk
-          cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.3.1.apk
+          if [ "$ERITV_SIGNING_READY" = "true" ]; then
+            cp eritv/build/outputs/apk/release/eritv-release.apk EriTV-v1.3.1.apk
+          else
+            cp eritv/build/outputs/apk/debug/eritv-debug.apk EriTV-v1.3.1.apk
+          fi
           cp eritv-mobile/build/outputs/apk/debug/eritv-mobile-debug.apk EriTV-Mobile-v1.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
